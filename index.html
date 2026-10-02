@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{TITLE}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh;color:#f5f5f5;background:#050816;overflow-y:auto;overflow-x:hidden;position:relative}
+    body::before{content:"";position:fixed;inset:0;background-image:url("background.png");background-size:cover;background-position:center;opacity:1;z-index:-2;animation:bgMove 40s ease-in-out infinite alternate;transform-origin:center}
+    @keyframes bgMove{0%{transform:scale(1) translate3d(0,0,0)}50%{transform:scale(1.1) translate3d(-10px,-10px,0)}100%{transform:scale(1.2) translate3d(10px,10px,0)}}
+    body::after{content:"";position:fixed;inset:0;background:radial-gradient(circle at top,rgba(255,255,255,0.08),transparent 55%),linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.95));z-index:-1}
+
+    .app-container{max-width:900px;margin:40px auto;padding:24px;border-radius:18px;background:rgba(10,10,25,0.9);box-shadow:0 24px 60px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);backdrop-filter:blur(18px)}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+    .title{font-size:1.4rem;font-weight:600;letter-spacing:.04em}
+    .subtitle{font-size:.9rem;color:#b0b6ff;opacity:.9}
+    .pill{padding:6px 12px;border-radius:999px;font-size:.8rem;background:linear-gradient(135deg,#6366f1,#22c55e);color:#0b1020;font-weight:600;box-shadow:0 0 0 1px rgba(255,255,255,0.2)}
+    .progress-bar{width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;margin-bottom:18px}
+    .progress-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#22c55e,#a3e635);transition:width .25s ease-out}
+
+    .quiz-card{border-radius:16px;padding:20px 18px;background:radial-gradient(circle at top left,rgba(99,102,241,0.18),transparent 55%),radial-gradient(circle at bottom right,rgba(34,197,94,0.18),transparent 55%),rgba(15,23,42,0.95);border:1px solid rgba(148,163,184,0.35)position:relative;overflow:hidden;}
+    .question-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:#cbd5f5;opacity:.9}
+    .question-index{font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem;color:#a5b4fc}
+    .question-type{font-size:1.8rem;padding:4px 10px;border-radius:999px;background:rgba(15,118,110,0.2);color:#5eead4;border:1px solid rgba(45,212,191,0.4)}
+
+    .prompt-label{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;margin-bottom:4px}
+    .prompt-text{font-size:2.4rem;font-weight:500;color:#e5e7eb;margin-bottom:16px}
+    .prompt-helper{
+  font-size:1.15rem;
+  font-weight:500;
+  color:#dbe0ff;
+  margin-bottom:18px;
+  padding-left:12px;
+  border-left:3px solid rgba(99,102,241,0.6)
+}
+
+    .options{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:18px}
+    .option-btn{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.5);background:rgba(15,23,42,0.9);color:#e5e7eb;font-size:.95rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;transition:all .18s ease-out}
+    .option-btn span.label{font-weight:500}
+    .option-btn:hover{border-color:#6366f1;background:radial-gradient(circle at top left,rgba(99,102,241,0.25),transparent 60%),rgba(15,23,42,0.95);transform:translateY(-1px);box-shadow:0 10px 25px rgba(15,23,42,0.7)}
+    .option-btn.selected{border-color:#6366f1;background:linear-gradient(135deg,rgba(79,70,229,0.9),rgba(37,99,235,0.9));box-shadow:0 12px 30px rgba(79,70,229,0.7)}
+    .option-btn.correct{border-color:#22c55e;background:linear-gradient(135deg,rgba(22,163,74,0.9),rgba(34,197,94,0.9));box-shadow:0 12px 30px rgba(22,163,74,0.7)}
+    .option-btn.incorrect{border-color:#ef4444;background:linear-gradient(135deg,rgba(185,28,28,0.9),rgba(239,68,68,0.9));box-shadow:0 12px 30px rgba(185,28,28,0.7)}
+
+    .feedback{min-height:20px;font-size:.9rem;margin-bottom:10px}
+    .feedback.correct{color:#4ade80}
+    .feedback.incorrect{color:#f97373}
+
+    .nav-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}
+    .nav-buttons{display:flex;gap:8px}
+    button.nav-btn,button.secondary-btn{border-radius:999px;border:none;padding:8px 14px;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s ease-out;white-space:nowrap}
+    button.nav-btn{background:rgba(15,23,42,0.9);color:#e5e7eb;border:1px solid rgba(148,163,184,0.6)}
+    button.nav-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+    button.nav-btn:not(:disabled):hover{border-color:#6366f1;background:rgba(30,64,175,0.9);box-shadow:0 8px 20px rgba(30,64,175,0.7);transform:translateY(-1px)}
+    button.secondary-btn{background:rgba(15,23,42,0.9);color:#e5e7eb;border:1px solid rgba(148,163,184,0.6)}
+    button.secondary-btn:hover{border-color:#f97316;background:rgba(30,64,175,0.9);box-shadow:0 8px 20px rgba(30,64,175,0.7);transform:translateY(-1px)}
+
+    .progress-text{font-size:.85rem;color:#9ca3af}
+    .score-pill{font-size:.85rem;padding:4px 10px;border-radius:999px;background:rgba(22,163,74,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.5)}
+
+    .recap{margin-top:18px;padding-top:14px;border-top:1px solid rgba(148,163,184,0.4);max-height:260px;overflow-y:auto;scrollbar-width:thin}
+    .recap h3{font-size:.95rem;margin-bottom:8px;color:#e5e7eb}
+    .recap-item{padding:8px 0;border-bottom:1px dashed rgba(148,163,184,0.4);font-size:.85rem}
+    .recap-item:last-child{border-bottom:none}
+    .recap-item .q-label{font-weight:600;color:#c4b5fd;margin-bottom:2px}
+    .recap-item .prompt{color:#9ca3af;margin-bottom:2px}
+    .recap-item .answer-line{display:flex;flex-wrap:wrap;gap:6px}
+    .tag-correct{color:#4ade80}
+    .tag-incorrect{color:#f97373}
+    .tag-neutral{color:#e5e7eb}
+
+    @media(min-width:640px){.options{grid-template-columns:1fr 1fr 1fr}}
+  
+/* ===== Adaptive option layouts (v03) ===== */
+.layout-1{grid-template-columns:1fr}
+.layout-2{grid-template-columns:1fr 1fr}
+.layout-3{grid-template-columns:repeat(3,1fr)}
+.layout-4{grid-template-columns:repeat(2,1fr)}
+
+.layout-5{grid-template-columns:repeat(6,1fr)}
+.layout-5 .option-btn:nth-child(-n+3){grid-column:span 2}
+.layout-5 .option-btn:nth-child(n+4){grid-column:span 3}
+
+.layout-6{grid-template-columns:repeat(3,1fr)}
+
+.layout-7{grid-template-columns:repeat(6,1fr)}
+.layout-7 .option-btn:nth-child(-n+3){grid-column:span 2}
+.layout-7 .option-btn:nth-child(n+4){grid-column:span 3}
+
+.layout-8{grid-template-columns:repeat(6,1fr)}
+.layout-8 .option-btn:nth-child(-n+6){grid-column:span 2}
+.layout-8 .option-btn:nth-child(n+7){grid-column:span 3}
+
+@media(max-width:640px){
+  .options{grid-template-columns:1fr}
+}
+
+
+/* ===== Header clamp (prevent long title overlapping the pill) ===== */
+header > div:first-child{max-width:calc(100% - 220px);}
+header .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+header .subtitle{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;}
+
+
+/* ===== Menu overlay ===== */
+.quiz-card.menu-open{height:240px;max-height:240px;}
+@media(max-width:640px){.quiz-card.menu-open{height:280px;max-height:280px;}}
+.menu-overlay{position:absolute;inset:0;border-radius:16px;z-index:50;overflow:hidden;background-image:url("Box Background.png");background-size:cover;background-position:center;background-repeat:no-repeat;background-color:rgba(15,23,42,0.55);background-blend-mode:overlay;border:1px solid rgba(148,163,184,0.35);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06);padding:18px 18px;display:flex;flex-direction:column;justify-content:space-between;}
+.menu-actions{display:flex;justify-content:flex-start;}
+#menuInfo,#menuSubtitle,#menuTitle{white-space:pre-line;}
+/* ===== Menu text styles ===== */
+.menu-head{display:flex;flex-direction:column;gap:10px;}
+#menuWelcome{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(176,182,255,0.75);}
+#menuTitle{font-size:clamp(1.35rem, 2.8vw, 2.15rem);line-height:1.12;padding-bottom:4px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+#menuSubtitle{font-size:1.12rem;line-height:1.28;color:#b0b6ff;opacity:.97;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+#menuInfo{font-size:1.02rem;line-height:1.3;color:#e5e7eb;opacity:.97;max-height:100px;overflow:auto;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,0.16);border:1px solid rgba(148,163,184,0.12);}
+#menuInfo.is-empty{display:none;}
+#feedback,#promptHelper,.subtitle{white-space:pre-line;}
+
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div>
+        <div class="title">{{TITLE}}</div>
+        <div class="subtitle">{{SUBTITLE}}</div>
+      </div>
+      <div class="pill" id="pillText">Multiple Choice</div>
+    </header>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="quiz-card">
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-head">
+      <div id="menuWelcome">WELCOME</div>
+      <div id="menuTitle">{{TITLE}}</div>
+      <div id="menuSubtitle">{{SUBTITLE}}</div>
+      <div id="menuInfo" class="is-empty" style="display:none"></div>
+    </div>
+    <div class="menu-actions">
+      <button class="nav-btn" id="startQuizBtn" type="button">Start quiz</button>
+    </div>
+  </div>
+  <div id="quizUI">
+
+      <div class="question-meta">
+        <div class="question-index" id="questionIndex">Question 1 / 10</div>
+        <div class="question-type" id="questionType"></div>
+      </div>
+
+      <div class="prompt-label" id="promptLabel" style="display:none">Prompt</div>
+      <div class="prompt-helper" id="promptHelper">{{PROMPT_HELPER}}</div>
+ <div class="prompt-text" id="promptText">...</div>
+
+      <div class="options" id="optionsContainer"></div>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="nav-row">
+        <div class="nav-buttons">
+          <button class="nav-btn" id="prevBtn" disabled>← Previous</button>
+          <button class="nav-btn" id="nextBtn">Next →</button>
+        </div>
+        <div class="nav-buttons">
+          <button class="secondary-btn" id="menuBtn" type="button">Back to menu</button>
+          <button class="secondary-btn" id="restartBtn">Restart</button>
+        </div>
+      </div>
+
+      <div class="nav-row" style="margin-top:10px;">
+        <div class="progress-text" id="progressText">Answered 0 / 10</div>
+        <div class="score-pill" id="scorePill">Score: 0 / 10</div>
+      </div>
+
+      <div class="recap" id="recap" style="display:block;">
+        <h3>Recap</h3>
+        <div id="recapList"></div>
+      </div>
+    </div>
+  </div>
+
+    </div>
+
+<!-- The generator will upsert these constants: QUIZ_CONFIG, LABEL_CONFIG, DATA -->
+  <script>
+    const QUIZ_CONFIG = {
+  "fields": {
+    "term": {
+      "roles": [
+        "answer"
+      ],
+      "label": ""
+    },
+    "french": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "FRENCH"
+    },
+    "category": {
+      "roles": [],
+      "label": ""
+    },
+    "syn1": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "SYNONYM"
+    },
+    "syn2": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "SYNONYM"
+    },
+    "def1": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "DEFINITION"
+    },
+    "def2": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "DEFINITION"
+    },
+    "expliquer": {
+      "roles": [],
+      "label": ""
+    },
+    "class": {
+      "roles": [],
+      "label": ""
+    }
+  },
+  "text": {
+    "title": "100 cybersecurity terms",
+    "subtitle": "Lisez la question à voix haute et sélectionnez la bonne réponse (3 options)",
+    "prompt_helper": "Répondez à la question",
+    "correct": "Correct! (en français : \"{{french}} \": \"{{expliquer}}\") (terme utilisé en {{category}})",
+    "incorrect": "Incorrect. La bonne réponse était \"{{answer}}\". (en français : \"{{french}}\") - {{class}}",
+    "score": "Score: {{score}} / {{total}}",
+    "end_message": "Fin du quiz!",
+    "menu_info": "Ce quiz est conçu pour vous permettre d'apprendre les 100 termes liés à la cybersécurité. Vous devez répondre à 10 questions aléatoires. Peu à peu, vous apprendrez tous ces  termes",
+    "start_button": "Appuyez ici pour commencer",
+    "menu_button": "Main menu"
+  },
+  "settings": {
+    "num_options": 3,
+    "num_questions": 10
+  }
+};
+    const LABEL_CONFIG = {
+  "DEFINITION": {
+    "uiLabel": "Definition",
+    "uiQuestion": "Quel mot anglais signifie:",
+    "maskAnswer": false
+  },
+  "FRENCH": {
+    "uiLabel": "FRENCH",
+    "uiQuestion": "Comment dit-on en en anglais?",
+    "maskAnswer": false
+  },
+  "SYNONYM": {
+    "uiLabel": "SYNONYM",
+    "uiQuestion": "Quel est le terme informatique qui a le même sens?",
+    "maskAnswer": false
+  }
+};
+    const DATA = [
+ { term: "Zero-day exploit", french: "Exploit zero-day", category: "attack technique", class: "compound noun", syn1: "day-zero exploit", syn2: "unknown exploit", def1: "An attack that exploits a vulnerability unknown to the vendor or defenders.", def2: "Exploitation of a security flaw before a fix or public disclosure exists.", expliquer: "Une attaque qui exploite une vulnérabilité inconnue de l’éditeur ou des défenseurs." },
+ { term: "Attack surface", french: "Surface d’attaque", category: "concept", class: "compound noun", syn1: "exposure surface", syn2: "attackable area", def1: "The total set of entry points an attacker could use to compromise a system.", def2: "All reachable interfaces, services, and paths that may be targeted for intrusion.", expliquer: "L’ensemble des points d’entrée qu’un attaquant peut utiliser pour compromettre un système." },
+ { term: "Lateral movement", french: "Mouvement latéral", category: "attack technique", class: "compound noun", syn1: "east-west movement", syn2: "internal pivoting", def1: "The technique of moving through a network after initial access to reach valuable assets.", def2: "Post-compromise navigation between systems to expand control and access.", expliquer: "Technique consistant à se déplacer dans un réseau après un premier accès pour atteindre des actifs de valeur." },
+ { term: "Privilege escalation", french: "Élévation de privilèges", category: "attack technique", class: "compound noun", syn1: "rights elevation", syn2: "privilege elevation", def1: "Gaining higher access rights than originally granted to perform restricted actions.", def2: "Abusing weaknesses or misconfigurations to obtain more powerful permissions.", expliquer: "Obtention de droits d’accès plus élevés que ceux accordés au départ afin d’effectuer des actions restreintes." },
+ { term: "Brute-force attack", french: "Attaque par force brute", category: "attack technique", class: "compound noun", syn1: "exhaustive search", syn2: "guessing attack", def1: "A method that tries many possibilities until the correct secret is found.", def2: "Repeated guessing of credentials or keys using systematic trial and error.", expliquer: "Méthode qui teste de nombreuses possibilités jusqu’à trouver le secret correct." },
+ { term: "Credential stuffing", french: "Bourrage d’identifiants", category: "attack technique", class: "compound noun", syn1: "credential replay", syn2: "password reuse attack", def1: "Using leaked username–password pairs to try logging into other services.", def2: "Automated attempts to reuse stolen credentials across multiple sites.", expliquer: "Utilisation de couples identifiant–mot de passe divulgués pour tenter de se connecter à d’autres services." },
+ { term: "Dictionary attack", french: "Attaque par dictionnaire", category: "attack technique", class: "compound noun", syn1: "wordlist attack", syn2: "list-based guessing", def1: "A guessing attack that tries common words and patterns from a predefined list.", def2: "Attempting authentication secrets by cycling through likely candidates.", expliquer: "Attaque par devinette qui essaie des mots courants et des motifs à partir d’une liste prédéfinie." },
+ { term: "Social engineering", french: "Ingénierie sociale", category: "attack technique", class: "compound noun", syn1: "human hacking", syn2: "deception attack", def1: "Manipulating people into revealing information or performing unsafe actions.", def2: "Exploiting trust and psychology to bypass technical security measures.", expliquer: "Manipulation de personnes afin qu’elles révèlent des informations ou exécutent des actions risquées." },
+ { term: "Watering hole attack", french: "Attaque par point d’eau", category: "attack technique", class: "compound noun", syn1: "strategic website compromise", syn2: "site-targeting attack", def1: "Compromising a website frequented by a target group to infect visitors.", def2: "Attacking users indirectly by booby-trapping sites they commonly visit.", expliquer: "Compromission d’un site fréquenté par un groupe cible afin d’infecter ses visiteurs." },
+ { term: "Malvertising", french: "Publicité malveillante", category: "attack vector", class: "noun", syn1: "malicious advertising", syn2: "toxic ads", def1: "Delivering attacks through online advertisements that redirect or run harmful code.", def2: "Using ad networks to distribute malicious content to unsuspecting users.", expliquer: "Diffusion d’attaques via des publicités en ligne qui redirigent ou exécutent du code nuisible." },
+ { term: "Supply chain attack", french: "Attaque de la chaîne d’approvisionnement", category: "attack technique", class: "compound noun", syn1: "third-party compromise", syn2: "dependency attack", def1: "Compromising a supplier or dependency to reach the final target indirectly.", def2: "Attacking software or services by tampering with upstream components.", expliquer: "Compromission d’un fournisseur ou d’une dépendance pour atteindre la cible finale de manière indirecte." },
+ { term: "Insider risk", french: "Risque interne", category: "risk", class: "compound noun", syn1: "internal risk", syn2: "trusted user risk", def1: "Security risk originating from people with legitimate access, intentionally or accidentally.", def2: "Potential harm caused by employees, contractors, or partners with authorized access.", expliquer: "Risque de sécurité provenant de personnes disposant d’un accès légitime, intentionnellement ou par accident." },
+ { term: "Botnet", french: "Réseau de bots", category: "threat actor capability", class: "noun", syn1: "zombie network", syn2: "robot network", def1: "A group of compromised devices controlled remotely to perform coordinated actions.", def2: "An attacker-managed fleet of infected hosts used for spam, attacks, or fraud.", expliquer: "Groupe d’appareils compromis contrôlés à distance pour mener des actions coordonnées." },
+ { term: "Rootkit", french: "Rootkit", category: "malicious technique", class: "noun", syn1: "stealth toolkit", syn2: "privilege-hiding kit", def1: "Software designed to hide malicious activity and maintain privileged access.", def2: "A set of tools that conceals an attacker’s presence on a compromised system.", expliquer: "Logiciel conçu pour dissimuler une activité malveillante et maintenir un accès privilégié." },
+ { term: "Keylogger", french: "Enregistreur de frappes", category: "malicious technique", class: "noun", syn1: "keystroke logger", syn2: "input sniffer", def1: "A tool that records keyboard input to capture secrets such as credentials.", def2: "Malicious or unauthorized logging of keystrokes to steal sensitive information.", expliquer: "Outil qui enregistre les frappes au clavier pour capturer des secrets comme des identifiants." },
+ { term: "Backdoor", french: "Porte dérobée", category: "threat", class: "noun", syn1: "hidden access", syn2: "secret entry", def1: "A hidden method to bypass normal access controls and gain unauthorized entry.", def2: "Covert access path that allows remote control or login without standard checks.", expliquer: "Méthode cachée permettant de contourner les contrôles d’accès normaux et d’obtenir une entrée non autorisée." },
+ { term: "Logic bomb", french: "Bombe logique", category: "threat", class: "compound noun", syn1: "time bomb code", syn2: "triggered payload", def1: "Malicious logic that activates when a specific condition or time is met.", def2: "Hidden code that executes harmful actions after a trigger event occurs.", expliquer: "Logique malveillante qui s’active lorsqu’une condition précise ou un moment donné est atteint." },
+ { term: "Exploit kit", french: "Kit d’exploitation", category: "tool", class: "compound noun", syn1: "attack kit", syn2: "exploit pack", def1: "A toolkit that automates exploitation of known weaknesses to compromise systems.", def2: "Bundled exploits and scripts used to infect victims with minimal effort.", expliquer: "Ensemble d’outils qui automatise l’exploitation de failles connues pour compromettre des systèmes." },
+ { term: "Arbitrary command execution", french: "Exécution de commandes arbitraires", category: "impact", class: "compound noun", syn1: "command execution", syn2: "remote command run", def1: "Ability for an attacker to run chosen commands on a target system.", def2: "A flaw that lets unauthorized users execute commands with the system’s privileges.", expliquer: "Capacité pour un attaquant d’exécuter des commandes de son choix sur un système cible." },
+ { term: "SQL injection", french: "Injection SQL", category: "attack technique", class: "compound noun", syn1: "SQLi", syn2: "query injection", def1: "Injecting malicious SQL into an application to manipulate or access stored information.", def2: "Abusing unsanitized input to alter database queries and retrieve or change records.", expliquer: "Insertion de SQL malveillant dans une application afin de manipuler ou d’accéder aux informations stockées." },
+ { term: "Command injection", french: "Injection de commandes", category: "attack technique", class: "compound noun", syn1: "shell injection", syn2: "OS command injection", def1: "Injecting system commands through an application to make the server execute them.", def2: "Exploiting improper input handling to run operating-system commands.", expliquer: "Injection de commandes système via une application pour forcer le serveur à les exécuter." },
+ { term: "Cross-site scripting", french: "Script intersites", category: "attack technique", class: "compound noun", syn1: "XSS", syn2: "browser script injection", def1: "Injecting scripts into a web page so they run in other users’ browsers.", def2: "Client-side code injection that steals sessions or alters page content.", expliquer: "Injection de scripts dans une page web afin qu’ils s’exécutent dans le navigateur d’autres utilisateurs." },
+ { term: "Cross-site request forgery", french: "Falsification de requête intersites", category: "attack technique", class: "compound noun", syn1: "CSRF", syn2: "one-click attack", def1: "Tricking a logged-in user’s browser into sending an unintended request.", def2: "Abuse of a user’s authenticated session to perform actions without consent.", expliquer: "Le fait de tromper le navigateur d’un utilisateur connecté pour qu’il envoie une requête non intentionnelle." },
+ { term: "Session hijacking", french: "Détournement de session", category: "attack technique", class: "compound noun", syn1: "cookie hijacking", syn2: "session takeover", def1: "Stealing or abusing session tokens to impersonate a legitimate user.", def2: "Gaining access by capturing session identifiers from a victim.", expliquer: "Vol ou abus de jetons de session afin d’usurper l’identité d’un utilisateur légitime." },
+ { term: "Man-in-the-middle", french: "Attaque de l’homme du milieu", category: "attack technique", class: "compound noun", syn1: "MitM", syn2: "interception attack", def1: "Intercepting and possibly altering communications between two parties without their knowledge.", def2: "An adversary positions themselves between endpoints to eavesdrop or modify traffic.", expliquer: "Interception et éventuellement modification des communications entre deux parties à leur insu." },
+ { term: "Replay attack", french: "Attaque par rejeu", category: "attack technique", class: "compound noun", syn1: "playback attack", syn2: "message replay", def1: "Reusing captured authentication messages to gain unauthorized access.", def2: "An attacker records valid traffic and re-sends it to fool a system.", expliquer: "Réutilisation de messages d’authentification capturés pour obtenir un accès non autorisé." },
+ { term: "DNS spoofing", french: "Usurpation DNS", category: "attack technique", class: "compound noun", syn1: "DNS poisoning", syn2: "name resolution spoofing", def1: "Falsifying DNS responses to redirect users to malicious destinations.", def2: "Manipulating name resolution so victims connect to an attacker-controlled host.", expliquer: "Falsification de réponses DNS afin de rediriger les utilisateurs vers des destinations malveillantes." },
+ { term: "Typosquatting", french: "Typosquattage", category: "fraud", class: "noun", syn1: "URL mimicry", syn2: "lookalike site", def1: "Registering misspelled or similar domains to trick users into visiting fake sites.", def2: "Using deceptive names that resemble legitimate brands to capture traffic.", expliquer: "Enregistrement de domaines mal orthographiés ou proches pour tromper les utilisateurs et les mener vers de faux sites." },
+ { term: "Clickjacking", french: "Détournement de clic", category: "attack technique", class: "noun", syn1: "UI redress", syn2: "click interception", def1: "Tricking users into clicking hidden elements different from what they perceive.", def2: "Overlay-based deception that forces unintended actions in a browser.", expliquer: "Le fait de tromper les utilisateurs pour qu’ils cliquent sur des éléments cachés différents de ce qu’ils perçoivent." },
+ { term: "Side-channel attack", french: "Attaque par canal auxiliaire", category: "attack technique", class: "compound noun", syn1: "leakage attack", syn2: "side-channel leakage", def1: "Extracting secrets by measuring indirect signals such as timing, power, or emissions.", def2: "Attacking cryptographic operations through observable physical or behavioral effects.", expliquer: "Extraction de secrets en mesurant des signaux indirects comme le temps, la consommation ou les émissions." },
+ { term: "Timing attack", french: "Attaque temporelle", category: "attack technique", class: "compound noun", syn1: "time-based attack", syn2: "latency analysis", def1: "Deriving secret information by analyzing how long operations take.", def2: "A side-channel technique that infers secrets from response-time differences.", expliquer: "Obtention d’informations secrètes en analysant la durée d’exécution des opérations." },
+ { term: "Buffer overflow", french: "Dépassement de tampon", category: "software weakness", class: "compound noun", syn1: "buffer overrun", syn2: "memory overflow", def1: "Writing beyond a buffer’s bounds, potentially allowing crashes or control of execution.", def2: "A flaw where excess input overwrites adjacent memory and can be exploited.", expliquer: "Écriture au-delà des limites d’un tampon, pouvant provoquer un crash ou une prise de contrôle de l’exécution." },
+ { term: "Integer overflow", french: "Dépassement d’entier", category: "software weakness", class: "compound noun", syn1: "integer wraparound", syn2: "arithmetic overflow", def1: "An arithmetic error where numbers exceed allowed limits and wrap to unexpected values.", def2: "Overflow in integer operations that causes incorrect calculations and security bugs.", expliquer: "Erreur arithmétique où des nombres dépassent la limite autorisée et se replient sur des valeurs inattendues." },
+ { term: "Race condition", french: "Condition de concurrence", category: "software weakness", class: "compound noun", syn1: "timing bug", syn2: "ordering flaw", def1: "A flaw that occurs when outcomes depend on the timing or order of events.", def2: "Unexpected behavior caused by improper synchronization between parallel operations.", expliquer: "Défaut qui survient lorsque le résultat dépend du timing ou de l’ordre des événements." },
+ { term: "Heap spraying", french: "Pulvérisation du tas", category: "attack technique", class: "compound noun", syn1: "heap fill", syn2: "spray technique", def1: "Filling the heap with repeated patterns to increase reliability of exploitation.", def2: "An exploit method that places payload-like data in many memory locations.", expliquer: "Remplissage du tas avec des motifs répétés pour augmenter la fiabilité de l’exploitation." },
+ { term: "Return-oriented programming", french: "Programmation orientée retours", category: "attack technique", class: "compound noun", syn1: "ROP", syn2: "gadget chaining", def1: "Building malicious behavior by chaining small instruction sequences already in memory.", def2: "A technique that reuses existing code fragments to bypass execution protections.", expliquer: "Construction d’un comportement malveillant en chaînant de petites séquences d’instructions déjà en mémoire." },
+ { term: "DLL hijacking", french: "Détournement de DLL", category: "attack technique", class: "compound noun", syn1: "library preloading", syn2: "module hijack", def1: "Forcing an application to load a malicious library instead of the legitimate one.", def2: "Abuse of library search order to execute attacker-controlled code.", expliquer: "Forcer une application à charger une bibliothèque malveillante à la place de la légitime." },
+ { term: "Kerberoasting", french: "Kerberoasting", category: "attack technique", class: "noun", syn1: "service ticket cracking", syn2: "Kerberos ticket attack", def1: "Extracting Kerberos service tickets and cracking them offline to recover secrets.", def2: "An Active Directory attack that targets weak service account credentials.", expliquer: "Extraction de tickets de service Kerberos puis cassage hors ligne pour retrouver des secrets." },
+ { term: "Pass-the-hash", french: "Pass-the-hash", category: "attack technique", class: "compound noun", syn1: "hash replay", syn2: "NTLM relay (hash)", def1: "Authenticating by using a stolen password hash instead of the plaintext secret.", def2: "Reusing captured hash values to impersonate a user on other systems.", expliquer: "Authentification en utilisant un hachage de mot de passe volé au lieu du secret en clair." },
+ { term: "Golden ticket", french: "Golden ticket", category: "attack technique", class: "compound noun", syn1: "forged TGT", syn2: "Kerberos master ticket", def1: "A forged Kerberos ticket granting broad access within a compromised domain.", def2: "An attacker-created ticket that can bypass authentication checks in Active Directory.", expliquer: "Ticket Kerberos falsifié donnant un accès étendu au sein d’un domaine compromis." },
+ { term: "Token impersonation", french: "Usurpation de jeton", category: "attack technique", class: "compound noun", syn1: "token theft", syn2: "session token abuse", def1: "Using a stolen or forged token to act as another identity.", def2: "Impersonation achieved by acquiring and replaying authentication tokens.", expliquer: "Utilisation d’un jeton volé ou falsifié pour agir comme une autre identité." },
+ { term: "Credential harvesting", french: "Collecte d’identifiants", category: "attack technique", class: "compound noun", syn1: "credential theft", syn2: "login capture", def1: "Stealing credentials by capturing them through fake prompts or interception.", def2: "Collecting usernames and secrets via deceptive pages or malware tooling.", expliquer: "Vol d’identifiants en les capturant via de faux formulaires ou par interception." },
+ { term: "Identity takeover", french: "Usurpation d’identité", category: "impact", class: "compound noun", syn1: "identity theft", syn2: "account impersonation", def1: "Unauthorized control of a user’s identity to access services or perform actions.", def2: "Compromise where an adversary acts as a legitimate user across systems.", expliquer: "Prise de contrôle non autorisée de l’identité d’un utilisateur pour accéder à des services ou effectuer des actions." },
+ { term: "Session fixation", french: "Fixation de session", category: "attack technique", class: "compound noun", syn1: "fixed session attack", syn2: "session ID forcing", def1: "Forcing a user to use a session ID known to the attacker, enabling hijacking.", def2: "An attack that sets or predicts the victim’s session identifier before login.", expliquer: "Forcer un utilisateur à utiliser un identifiant de session connu de l’attaquant, permettant le détournement." },
+ { term: "Intrusion detection system", french: "Système de détection d’intrusion", category: "tool", class: "compound noun", syn1: "IDS", syn2: "intrusion detection", def1: "A system that monitors activity and raises alerts when suspicious behavior is detected.", def2: "Detection technology that identifies potential intrusions via signatures or anomalies.", expliquer: "Système qui surveille l’activité et déclenche des alertes lorsqu’un comportement suspect est détecté." },
+ { term: "Intrusion prevention system", french: "Système de prévention d’intrusion", category: "tool", class: "compound noun", syn1: "IPS", syn2: "intrusion prevention", def1: "A security system that detects and actively blocks malicious traffic or actions.", def2: "Prevention technology that stops intrusions by enforcing rules in real time.", expliquer: "Système de sécurité qui détecte et bloque activement le trafic ou les actions malveillantes." },
+ { term: "Endpoint detection and response", french: "Détection et réponse sur les terminaux", category: "tool", class: "compound noun", syn1: "EDR", syn2: "endpoint telemetry", def1: "A capability that collects endpoint activity to detect, investigate, and respond to attacks.", def2: "Tools that monitor endpoints and support rapid containment and remediation.", expliquer: "Capacité qui collecte l’activité des terminaux pour détecter, enquêter et répondre aux attaques." },
+ { term: "Security information and event management", french: "Gestion des informations et des événements de sécurité", category: "tool", class: "compound noun", syn1: "SIEM", syn2: "event correlation platform", def1: "A platform that centralizes logs and correlates events to support detection and response.", def2: "Security analytics system that aggregates alerts and activity across an organization.", expliquer: "Plateforme qui centralise les journaux et corrèle les événements pour soutenir la détection et la réponse." },
+ { term: "Incident response", french: "Réponse aux incidents", category: "process", class: "compound noun", syn1: "IR", syn2: "incident handling", def1: "A structured approach to prepare for, detect, contain, and recover from security incidents.", def2: "Coordinated actions taken to manage and limit the impact of an incident.", expliquer: "Approche structurée pour se préparer, détecter, contenir et se rétablir après des incidents de sécurité." },
+ { term: "Playbook", french: "Guide opérationnel", category: "process", class: "noun", syn1: "response playbook", syn2: "procedure set", def1: "A documented set of steps to follow for a specific security scenario.", def2: "Standardized actions and decision points used during incident response.", expliquer: "Ensemble d’étapes documentées à suivre pour un scénario de sécurité donné." },
+ { term: "Runbook", french: "Manuel d’exploitation", category: "operations", class: "noun", syn1: "operations manual", syn2: "operational guide", def1: "A detailed operational guide describing how to perform routine or emergency actions.", def2: "Step-by-step instructions for executing technical procedures reliably.", expliquer: "Guide opérationnel détaillé décrivant comment effectuer des actions courantes ou d’urgence." },
+ { term: "Digital forensics", french: "Informatique légale numérique", category: "investigation", class: "compound noun", syn1: "computer forensics", syn2: "forensic analysis", def1: "The practice of collecting and analyzing digital evidence for investigations.", def2: "Methods used to preserve and examine artifacts from devices and systems.", expliquer: "Pratique consistant à collecter et analyser des preuves numériques dans le cadre d’enquêtes." },
+ { term: "Chain of custody", french: "Chaîne de possession", category: "governance", class: "compound noun", syn1: "evidence handling", syn2: "custody record", def1: "A documented record showing who handled evidence and when, to maintain integrity.", def2: "Traceability process that ensures evidence is controlled and admissible.", expliquer: "Enregistrement documenté indiquant qui a manipulé une preuve et quand, afin de préserver son intégrité." },
+ { term: "Memory forensics", french: "Analyse forensique de la mémoire", category: "investigation", class: "compound noun", syn1: "RAM analysis", syn2: "volatile memory forensics", def1: "Analyzing volatile memory to discover running processes, secrets, and attacker activity.", def2: "Forensic techniques focused on artifacts present in system memory.", expliquer: "Analyse de la mémoire volatile pour découvrir des processus en cours, des secrets et l’activité de l’attaquant." },
+ { term: "Sandboxing", french: "Mise en bac à sable", category: "defense", class: "noun", syn1: "isolation", syn2: "detonation environment", def1: "Running untrusted code in an isolated environment to limit harm.", def2: "Containment technique that separates risky execution from the main system.", expliquer: "Exécution de code non fiable dans un environnement isolé afin de limiter les dommages." },
+ { term: "Honeypot", french: "Honeypot", category: "deception", class: "noun", syn1: "decoy system", syn2: "trap host", def1: "A decoy system designed to attract attackers and observe their behavior.", def2: "Instrumented bait that provides early warning and intelligence on intrusions.", expliquer: "Système leurre conçu pour attirer les attaquants et observer leur comportement." },
+ { term: "Honeynet", french: "Honeynet", category: "deception", class: "noun", syn1: "decoy network", syn2: "trap environment", def1: "A network of honeypots used to study attacker techniques at scale.", def2: "Multiple decoy systems connected to simulate a realistic target environment.", expliquer: "Réseau de honeypots utilisé pour étudier les techniques des attaquants à grande échelle." },
+ { term: "Canary token", french: "Jeton canari", category: "deception", class: "compound noun", syn1: "tripwire token", syn2: "beacon token", def1: "A planted token that triggers an alert when accessed, indicating possible compromise.", def2: "Deception artifact used to detect unauthorized access to files or systems.", expliquer: "Jeton placé volontairement qui déclenche une alerte lorsqu’il est consulté, indiquant une possible compromission." },
+ { term: "Rate limiting", french: "Limitation de débit", category: "defense", class: "compound noun", syn1: "throttling", syn2: "request limiting", def1: "Restricting how many requests or actions are allowed in a given time window.", def2: "Control that reduces abuse by limiting repeated attempts and automated traffic.", expliquer: "Restriction du nombre de requêtes ou d’actions autorisées sur une période donnée." },
+ { term: "Log analysis", french: "Analyse des journaux", category: "monitoring", class: "compound noun", syn1: "log review", syn2: "event analysis", def1: "Examining logs to identify anomalies, intrusions, or operational issues.", def2: "Interpreting recorded events to detect suspicious patterns and support investigations.", expliquer: "Examen des journaux pour identifier des anomalies, des intrusions ou des problèmes opérationnels." },
+ { term: "Audit trail", french: "Piste d’audit", category: "governance", class: "compound noun", syn1: "activity trail", syn2: "audit log", def1: "A chronological record of activities that supports accountability and investigation.", def2: "Recorded evidence showing who did what and when within a system.", expliquer: "Enregistrement chronologique des activités permettant la traçabilité, la responsabilité et l’enquête." },
+ { term: "Security monitoring", french: "Surveillance de sécurité", category: "monitoring", class: "compound noun", syn1: "continuous monitoring", syn2: "security watch", def1: "Ongoing observation of systems to detect suspicious events and changes.", def2: "Continuous collection and review of signals to identify security issues quickly.", expliquer: "Observation continue des systèmes afin de détecter rapidement des événements et changements suspects." },
+ { term: "Alert fatigue", french: "Fatigue d’alertes", category: "operations", class: "compound noun", syn1: "alarm fatigue", syn2: "alert overload", def1: "Reduced responsiveness caused by receiving too many alerts, many of them low value.", def2: "Analyst burnout and missed incidents due to excessive, noisy notifications.", expliquer: "Baisse de vigilance due à un trop grand nombre d’alertes, souvent peu pertinentes." },
+ { term: "False positive", french: "Faux positif", category: "monitoring", class: "compound noun", syn1: "benign alert", syn2: "incorrect detection", def1: "An alert or detection that incorrectly indicates malicious activity.", def2: "A security signal that looks suspicious but is actually harmless.", expliquer: "Alerte ou détection qui indique à tort une activité malveillante." },
+ { term: "Security baseline", french: "Référentiel de sécurité", category: "governance", class: "compound noun", syn1: "secure configuration baseline", syn2: "hardening baseline", def1: "A minimum set of configuration settings required to reduce risk.", def2: "Standard configuration targets used to establish a secure default posture.", expliquer: "Ensemble minimal de paramètres de configuration requis pour réduire les risques." },
+ { term: "Hardening", french: "Durcissement", category: "defense", class: "noun", syn1: "lockdown", syn2: "secure configuration", def1: "Reducing attack opportunities by tightening configuration and removing unnecessary features.", def2: "Securing systems by disabling risky services and applying restrictive settings.", expliquer: "Réduction des possibilités d’attaque en renforçant la configuration et en supprimant les fonctionnalités inutiles." },
+ { term: "Mitigate", french: "Atténuer", category: "process", class: "verb", syn1: "reduce", syn2: "lessen", def1: "To reduce the likelihood or impact of a security risk.", def2: "To apply controls that decrease the severity of a potential incident.", expliquer: "Réduire la probabilité ou l’impact d’un risque de sécurité." },
+ { term: "Containment", french: "Confinement", category: "incident response", class: "noun", syn1: "isolation phase", syn2: "containment action", def1: "Actions taken to limit the spread and impact of an active incident.", def2: "Steps that isolate affected systems to prevent further damage.", expliquer: "Actions visant à limiter la propagation et l’impact d’un incident en cours." },
+ { term: "Eradication", french: "Éradication", category: "incident response", class: "noun", syn1: "removal", syn2: "clean-up", def1: "Eliminating the attacker’s presence and the root cause from affected systems.", def2: "Removing malicious artifacts and fixing the weakness that enabled the incident.", expliquer: "Élimination de la présence de l’attaquant et de la cause racine des systèmes affectés." },
+ { term: "Recovery", french: "Rétablissement", category: "incident response", class: "noun", syn1: "service restoration", syn2: "return to normal", def1: "Restoring normal operations safely after an incident while monitoring for recurrence.", def2: "Bringing systems back online and validating they are clean and stable.", expliquer: "Rétablir des opérations normales en toute sécurité après un incident tout en surveillant une éventuelle récidive." },
+ { term: "Post-incident review", french: "Revue post-incident", category: "governance", class: "compound noun", syn1: "after-action review", syn2: "postmortem", def1: "A structured review to understand what happened, what worked, and what must improve.", def2: "An analysis performed after an incident to capture findings and corrective actions.", expliquer: "Revue structurée pour comprendre ce qui s’est passé, ce qui a fonctionné et ce qui doit être amélioré." },
+ { term: "Lessons learned", french: "Retours d’expérience", category: "governance", class: "compound noun", syn1: "insights", syn2: "takeaways", def1: "Documented insights from an incident used to improve defenses and processes.", def2: "Knowledge captured from events to prevent recurrence and strengthen readiness.", expliquer: "Enseignements documentés issus d’un incident pour améliorer les défenses et les processus." },
+ { term: "Risk assessment", french: "Évaluation des risques", category: "risk", class: "compound noun", syn1: "risk analysis", syn2: "risk evaluation", def1: "Identifying threats and estimating likelihood and impact to prioritize controls.", def2: "Process of analyzing risks to decide what mitigation is necessary.", expliquer: "Identification des menaces et estimation de leur probabilité et impact afin de prioriser les mesures de contrôle." },
+ { term: "Risk appetite", french: "Appétence au risque", category: "risk", class: "compound noun", syn1: "risk tolerance", syn2: "risk threshold", def1: "The amount of risk an organization is willing to accept to achieve its objectives.", def2: "A defined level of risk exposure considered acceptable by leadership.", expliquer: "Niveau de risque qu’une organisation est prête à accepter pour atteindre ses objectifs." },
+ { term: "Compliance", french: "Conformité", category: "governance", class: "noun", syn1: "regulatory adherence", syn2: "conformance", def1: "Meeting required laws, standards, and policies related to security.", def2: "Operating in alignment with external regulations and internal requirements.", expliquer: "Respect des lois, normes et politiques exigées en matière de sécurité." },
+ { term: "Due diligence", french: "Diligence raisonnable", category: "governance", class: "compound noun", syn1: "reasonable care", syn2: "vendor scrutiny", def1: "Reasonable steps taken to assess and manage security risks before decisions or partnerships.", def2: "Investigations and checks performed to confirm controls and reduce exposure.", expliquer: "Mesures raisonnables prises pour évaluer et gérer les risques de sécurité avant des décisions ou partenariats." },
+ { term: "Policy enforcement", french: "Application des politiques", category: "governance", class: "compound noun", syn1: "rule enforcement", syn2: "policy control", def1: "Ensuring security policies are followed through controls, monitoring, and consequences.", def2: "Mechanisms that make policy requirements effective in daily operations.", expliquer: "Assurer le respect des politiques de sécurité via des contrôles, de la surveillance et des mesures correctives." },
+ { term: "Security control", french: "Contrôle de sécurité", category: "governance", class: "compound noun", syn1: "safeguard", syn2: "protective measure", def1: "A measure implemented to reduce risk by preventing, detecting, or responding to threats.", def2: "Administrative, technical, or physical actions that protect assets and operations.", expliquer: "Mesure mise en œuvre pour réduire les risques en prévenant, détectant ou répondant aux attaques." },
+ { term: "Compensating control", french: "Contrôle compensatoire", category: "governance", class: "compound noun", syn1: "alternative control", syn2: "substitute safeguard", def1: "A different control that provides comparable protection when the primary control is not feasible.", def2: "Risk-reducing measure used to offset gaps in standard requirements.", expliquer: "Contrôle différent offrant une protection comparable lorsque le contrôle principal n’est pas réalisable." },
+ { term: "Segregation of duties", french: "Séparation des tâches", category: "governance", class: "compound noun", syn1: "SoD", syn2: "duty separation", def1: "Splitting critical tasks among multiple people to reduce fraud and error.", def2: "A governance practice that prevents one person from having end-to-end control.", expliquer: "Répartition des tâches critiques entre plusieurs personnes pour réduire la fraude et les erreurs." },
+ { term: "Least privilege", french: "Moindre privilège", category: "identity", class: "compound noun", syn1: "minimum privilege", syn2: "need-to-know access", def1: "Granting only the access necessary to perform a job and no more.", def2: "Access model that limits permissions to the smallest workable set.", expliquer: "Accorder uniquement les accès nécessaires pour réaliser une tâche, et rien de plus." },
+ { term: "Defense in depth", french: "Défense en profondeur", category: "strategy", class: "compound noun", syn1: "layered security", syn2: "multiple safeguards", def1: "Using multiple layers of controls so that failure of one does not compromise security.", def2: "A strategy combining preventive, detective, and responsive measures across layers.", expliquer: "Utiliser plusieurs couches de contrôles afin que l’échec de l’une ne compromette pas la sécurité." },
+ { term: "Zero trust", french: "Zéro confiance", category: "strategy", class: "compound noun", syn1: "never trust, always verify", syn2: "continuous verification", def1: "A security model that assumes breach and requires continual verification of every access request.", def2: "Approach where trust is not implicit and access is validated each time.", expliquer: "Modèle de sécurité qui suppose une compromission et exige une vérification continue de chaque demande d’accès." },
+ { term: "Microsegmentation", french: "Micro-segmentation", category: "architecture", class: "noun", syn1: "fine-grained segmentation", syn2: "workload segmentation", def1: "Dividing environments into small zones to tightly control traffic between workloads.", def2: "Granular isolation that limits lateral movement by restricting east-west communications.", expliquer: "Découpage des environnements en petites zones pour contrôler finement le trafic entre charges de travail." },
+ { term: "Identity and access management", french: "Gestion des identités et des accès", category: "identity", class: "compound noun", syn1: "IAM", syn2: "access management", def1: "Processes and tools that manage identities, authentication, authorization, and access lifecycle.", def2: "A discipline that controls who can access what, under which conditions.", expliquer: "Ensemble de processus et d’outils qui gèrent les identités, l’authentification, l’autorisation et le cycle de vie des accès." },
+ { term: "Single sign-on", french: "Authentification unique", category: "identity", class: "compound noun", syn1: "SSO", syn2: "federated login", def1: "Allowing users to access multiple services using one authentication session.", def2: "Mechanism that reduces repeated logins by reusing a trusted identity session.", expliquer: "Permettre aux utilisateurs d’accéder à plusieurs services avec une seule session d’authentification." },
+ { term: "Federation", french: "Fédération d’identités", category: "identity", class: "noun", syn1: "identity federation", syn2: "trust federation", def1: "Establishing trust between identity systems so users can access external services.", def2: "Linking identity providers and services to enable cross-organization authentication.", expliquer: "Établir une relation de confiance entre des systèmes d’identité pour permettre l’accès à des services externes." },
+ { term: "OAuth", french: "OAuth", category: "identity", class: "noun", syn1: "delegated authorization", syn2: "token-based authorization", def1: "A framework that allows an application to access resources on a user’s behalf using tokens.", def2: "Delegated authorization mechanism that avoids sharing user passwords with apps.", expliquer: "Cadre permettant à une application d’accéder à des ressources au nom d’un utilisateur via des jetons." },
+ { term: "OpenID Connect", french: "OpenID Connect", category: "identity", class: "compound noun", syn1: "OIDC", syn2: "identity layer on OAuth", def1: "An identity protocol that adds authentication to OAuth using standardized identity tokens.", def2: "A method for verifying a user’s identity and obtaining profile claims via tokens.", expliquer: "Protocole d’identité qui ajoute l’authentification à OAuth via des jetons d’identité standardisés." },
+ { term: "SAML assertion", french: "Assertion SAML", category: "identity", class: "compound noun", syn1: "SAML token", syn2: "authentication assertion", def1: "A signed statement that conveys authentication and authorization information between parties.", def2: "An XML-based claim used to enable federated authentication.", expliquer: "Déclaration signée qui transmet des informations d’authentification et d’autorisation entre parties." },
+ { term: "Multi-tenancy", french: "Multi-location (multi-tenant)", category: "architecture", class: "noun", syn1: "shared tenancy", syn2: "tenant isolation", def1: "Architecture where multiple customers share infrastructure while remaining logically separated.", def2: "Design that isolates tenants at the software layer while using common resources.", expliquer: "Architecture où plusieurs clients partagent une infrastructure tout en restant séparés logiquement." },
+ { term: "Attack vector", french: "Vecteur d’attaque", category: "concept", class: "compound noun", syn1: "attack path", syn2: "entry method", def1: "A route or method used to gain unauthorized access to a system.", def2: "The mechanism an attacker uses to deliver a payload or achieve access.", expliquer: "Chemin ou méthode utilisé pour obtenir un accès non autorisé à un système." },
+ { term: "Reconnaissance", french: "Reconnaissance", category: "attack phase", class: "noun", syn1: "information gathering", syn2: "footprinting", def1: "Collecting information about a target to plan an attack.", def2: "Pre-attack discovery of hosts, services, people, and technologies.", expliquer: "Collecte d’informations sur une cible afin de planifier une attaque." },
+ { term: "Enumeration", french: "Énumération", category: "attack phase", class: "noun", syn1: "service discovery", syn2: "resource listing", def1: "Actively querying a target to list users, shares, services, or other resources.", def2: "Systematic discovery of accessible objects that can aid exploitation.", expliquer: "Interrogation active d’une cible pour lister des utilisateurs, services, partages ou autres ressources." },
+ { term: "Payload", french: "Charge utile", category: "attack component", class: "noun", syn1: "malicious payload", syn2: "exploit payload", def1: "The part of an attack that performs the intended harmful action after delivery.", def2: "Code or commands executed on the target to achieve the attacker’s objective.", expliquer: "Partie d’une attaque qui réalise l’action nuisible prévue après la livraison." },
+ { term: "Command and control", french: "Commande et contrôle", category: "attack infrastructure", class: "compound noun", syn1: "C2", syn2: "C&C", def1: "Infrastructure used by attackers to remotely manage compromised systems.", def2: "Communication channel that lets an adversary issue commands and receive results.", expliquer: "Infrastructure utilisée par des attaquants pour gérer à distance des systèmes compromis." },
+ { term: "Exfiltration", french: "Exfiltration", category: "attack technique", class: "noun", syn1: "data theft", syn2: "unauthorized transfer", def1: "Unauthorized transfer of information from a system to an external destination.", def2: "Removing sensitive content from an environment without permission.", expliquer: "Transfert non autorisé d’informations depuis un système vers une destination externe." },
+ { term: "Denial-of-service", french: "Déni de service", category: "attack technique", class: "compound noun", syn1: "DoS", syn2: "service disruption", def1: "An attack that makes a service unavailable by overwhelming or exhausting resources.", def2: "Intentional disruption that prevents legitimate users from accessing a system.", expliquer: "Attaque rendant un service indisponible en saturant ou épuisant ses ressources." },
+ { term: "Distributed denial-of-service", french: "Déni de service distribué", category: "attack technique", class: "compound noun", syn1: "DDoS", syn2: "flood attack", def1: "A DoS attack launched from many sources to overwhelm a target.", def2: "Coordinated traffic flooding from multiple compromised devices or networks.", expliquer: "Attaque de déni de service lancée depuis de nombreuses sources pour submerger une cible." },
+ { term: "Spoofing", french: "Usurpation", category: "attack technique", class: "noun", syn1: "impersonation", syn2: "forgery", def1: "Pretending to be a trusted entity to deceive systems or users.", def2: "Falsifying identity information to gain unauthorized trust.", expliquer: "Se faire passer pour une entité de confiance afin de tromper des systèmes ou des utilisateurs." }
+];
+  </script>
+
+  <script>
+  // =========================================================
+  // QUIZ ENGINE (CONFIG-DRIVEN)
+  // Uses: QUIZ_CONFIG (roles+text+settings), LABEL_CONFIG (per label UI), DATA (dataset)
+  // =========================================================
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function getFieldsByRole(role){
+    try{
+      return Object.keys(QUIZ_CONFIG.fields||{}).filter(k => (QUIZ_CONFIG.fields[k].roles||[]).includes(role));
+    }catch(e){
+      return [];
+    }
+  }
+
+  function safeText(t){
+    return (t===null||t===undefined) ? "" : String(t);
+  }
+
+  // =========================================================
+  // Dynamic placeholder support (template contract)
+  // Any {{fieldName}} from the current DATA row must resolve in feedback text, etc.
+  // =========================================================
+  function toSafeKey(k){
+    return safeText(k)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g,'_')
+      .replace(/[^a-z0-9_]/g,'_')
+      .replace(/_+/g,'_')
+      .replace(/^_+|_+$/g,'');
+  }
+
+  function applyTemplate(t, ctx){
+    var s = safeText(t);
+    if(!s || s.indexOf('{{') === -1) return s;
+    ctx = ctx || {};
+    return s.replace(/\{\{\s*([^}]+?)\s*\}\}/g, function(_, key){
+      key = safeText(key).trim();
+      if(!key) return '';
+      if(Object.prototype.hasOwnProperty.call(ctx, key)) return safeText(ctx[key]);
+      var sk = toSafeKey(key);
+      if(sk && Object.prototype.hasOwnProperty.call(ctx, sk)) return safeText(ctx[sk]);
+      var lk = key.toLowerCase();
+      if(Object.prototype.hasOwnProperty.call(ctx, lk)) return safeText(ctx[lk]);
+      return '';
+    });
+  }
+
+  // Expose for generator-injected wrappers (if any) and for internal use
+  window.applyTemplate = window.applyTemplate || applyTemplate;
+  window.__QUIZ_CTX = window.__QUIZ_CTX || {};
+
+
+  // DOM refs
+  const progressFillEl = document.getElementById("progressFill");
+  const questionIndexEl = document.getElementById("questionIndex");
+  const questionTypeEl = document.getElementById("questionType");
+  const promptLabelEl = document.getElementById("promptLabel");
+  const promptTextEl = document.getElementById("promptText");
+  const promptHelperEl = document.getElementById("promptHelper");
+  const optionsContainer = document.getElementById("optionsContainer");
+  const feedbackEl = document.getElementById("feedback");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const progressTextEl = document.getElementById("progressText");
+  const scorePillEl = document.getElementById("scorePill");
+  const recapEl = document.getElementById("recap");
+  const recapListEl = document.getElementById("recapList");
+  const pillTextEl = document.getElementById("pillText");
+
+  var questionOrder = [];
+  var currentIndex = 0;
+  var score = 0;
+  var answeredCount = 0;
+  var history = [];
+  var totalQuestions = 0;
+
+  function pickPromptField(entry, promptFields, answerField){
+    const candidates = shuffle(promptFields);
+    for(const f of candidates){
+      if(f === answerField) continue;
+      const v = safeText(entry[f]).trim();
+      const ans = safeText(entry[answerField]).trim();
+      if(v && v.toLowerCase() !== ans.toLowerCase()) return f;
+    }
+    return promptFields.find(f => safeText(entry[f]).trim()) || answerField;
+  }
+
+  function buildOptions(correct, allAnswers, numOptions){
+    const wrongPool = shuffle(allAnswers.filter(a => a && a.toLowerCase() !== correct.toLowerCase()));
+    const wrong = wrongPool.slice(0, Math.max(0, numOptions - 1));
+    return shuffle([correct, ...wrong]);
+  }
+
+  function renderRecap(answerField){
+    recapListEl.innerHTML = "";
+    if(answeredCount === 0){
+      recapEl.style.display = "none";
+      return;
+    }
+    recapEl.style.display = "block";
+
+    history.forEach((h, idx) => {
+      if(!h) return;
+      const div = document.createElement("div");
+      div.className = "recap-item";
+      div.innerHTML = `
+        <div class="q-label">Q${idx+1} – ${h.uiLabel}</div>
+        <div class="prompt">${h.promptValue}</div>
+        <div class="answer-line">
+          <span class="${h.isCorrect ? "tag-correct" : "tag-incorrect"}">
+            Your answer: ${h.chosen ?? "—"}
+          </span>
+          <span class="tag-neutral">Correct: ${h.correct}</span>
+        </div>
+      `;
+      recapListEl.appendChild(div);
+    });
+  }
+
+  function updateProgress(){
+    progressTextEl.textContent = `Answered ${answeredCount} / ${totalQuestions}`;
+    scorePillEl.textContent = `Score: ${score} / ${totalQuestions}`;
+    const denom = Math.max(1, totalQuestions - 1);
+    const pct = (currentIndex / denom) * 100;
+    progressFillEl.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  }
+
+  function updateNavButtons(){
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex >= totalQuestions - 1;
+  }
+
+  function setFeedback(text, kind){
+    try{
+      if(typeof window.applyTemplate === "function"){
+        text = window.applyTemplate(text, window.__QUIZ_CTX || {});
+      }
+    }catch(e){}
+    feedbackEl.textContent = text;
+    feedbackEl.className = "feedback" + (kind ? " " + kind : "");
+  }
+
+  function loadQuestion(answerField, promptFields, numOptions, texts){
+    const entryIndex = questionOrder[currentIndex];
+    const entry = DATA[entryIndex];
+
+    const promptField = pickPromptField(entry, promptFields, answerField);
+    const promptValue = safeText(entry[promptField]);
+    let promptValueDisplay = promptValue;
+    const correct = safeText(entry[answerField]); safeText(entry[answerField]);
+
+    // label mapping from field -> labelKey -> LABEL_CONFIG
+    const fieldDef = (QUIZ_CONFIG.fields||{})[promptField] || {};
+    const labelKey = fieldDef.label || promptField;
+    const labelCfg = (LABEL_CONFIG||{})[labelKey] || { uiLabel: labelKey, uiQuestion: (texts.prompt_helper||"") };
+
+    const uiLabel = labelCfg.uiLabel || labelKey;
+    const uiQuestion = labelCfg.uiQuestion || texts.prompt_helper || "";
+
+    
+    // Build template context for dynamic placeholders
+    try{
+      var maskAnswer = !!labelCfg.maskAnswer;
+      if(maskAnswer && typeof maskAnswerInText === 'function'){
+        promptValueDisplay = maskAnswerInText(promptValueDisplay, correct);
+      }
+      window.__QUIZ_CTX = Object.assign({}, entry, {
+        answer: correct,
+        prompt: promptValueDisplay,
+        promptText: promptValueDisplay,
+        promptHelper: uiQuestion,
+        uiLabel: uiLabel,
+        uiQuestion: uiQuestion,
+        maskAnswer: maskAnswer,
+        questionIndex: (currentIndex + 1) + ' / ' + totalQuestions,
+        score: score,
+        total: totalQuestions,
+        answerField: answerField,
+        promptField: promptField,
+        labelKey: labelKey
+      });
+    }catch(e){}
+// header
+    questionIndexEl.textContent = `Question ${currentIndex + 1} / ${totalQuestions}`;
+    questionTypeEl.textContent = uiLabel;
+    // prompt label element is optional (hidden by default)
+    if(promptLabelEl) promptLabelEl.textContent = uiLabel;
+
+    promptHelperEl.textContent = uiQuestion;
+    promptTextEl.textContent = (typeof promptValueDisplay !== "undefined" ? promptValueDisplay : promptValue);
+
+    // options
+    const allAnswers = DATA.map(r => safeText(r[answerField])).filter(Boolean);
+    const options = buildOptions(correct, allAnswers, numOptions);
+
+    optionsContainer.innerHTML = "";
+    optionsContainer.className = 'options layout-1';
+    setFeedback("", "");
+
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<span class="label">${opt}</span>`;
+      btn.addEventListener("click", () => handleClick(opt, correct, uiLabel, promptValue, options));
+      optionsContainer.appendChild(btn);
+    });
+
+    // restore previous answer (if navigating)
+    const dataIndex = questionOrder[currentIndex];
+  if (history[dataIndex]) { restorePreviousAnswer(history[dataIndex], correct); }
+
+    updateNavButtons();
+    updateProgress();
+  }
+
+  function restorePreviousAnswer(h, correct){
+    try{ if(h && h.ctx) window.__QUIZ_CTX = h.ctx; }catch(e){}
+    const buttons = [...document.querySelectorAll(".option-btn")];
+    buttons.forEach(b => b.classList.remove("selected","correct","incorrect"));
+
+    const chosen = h.chosen;
+    const chosenBtn = buttons.find(b => b.textContent.trim() === chosen);
+    if(chosenBtn){
+      chosenBtn.classList.add("selected");
+      if(h.isCorrect){
+        chosenBtn.classList.add("correct");
+        setFeedback(QUIZ_CONFIG.text?.correct || "Correct!", "correct");
+      } else {
+        chosenBtn.classList.add("incorrect");
+        const msg = (QUIZ_CONFIG.text?.incorrect || "Incorrect. The correct answer is {{answer}}.")
+          ;
+        setFeedback(msg, "incorrect");
+        const correctBtn = buttons.find(b => b.textContent.trim() === correct);
+        if(correctBtn) correctBtn.classList.add("correct");
+      }
+    }
+  }
+
+  function handleClick(choice, correct, uiLabel, promptValue, options){
+    const dataIndex = questionOrder[currentIndex];
+  if (history[dataIndex] && typeof history[dataIndex].isCorrect === "boolean") return;
+
+    const isCorrect = choice === correct;
+    const buttons = [...document.querySelectorAll(".option-btn")];
+    buttons.forEach(b => b.classList.remove("selected","correct","incorrect"));
+
+    const chosenBtn = buttons.find(b => b.textContent.trim() === choice);
+    if(chosenBtn) chosenBtn.classList.add("selected");
+
+    if(isCorrect){
+      if(chosenBtn) chosenBtn.classList.add("correct");
+      score += 1;
+      setFeedback(QUIZ_CONFIG.text?.correct || "Correct!", "correct");
+    } else {
+      if(chosenBtn) chosenBtn.classList.add("incorrect");
+      const msg = (QUIZ_CONFIG.text?.incorrect || "Incorrect. The correct answer is {{answer}}.")
+        ;
+      setFeedback(msg, "incorrect");
+      const correctBtn = buttons.find(b => b.textContent.trim() === correct);
+      if(correctBtn) correctBtn.classList.add("correct");
+    }
+
+    answeredCount += 1;
+    history[dataIndex] = {
+      uiLabel,
+      promptValue: (typeof promptValueDisplay !== 'undefined' ? promptValueDisplay : promptValue),
+      correct,
+      chosen: choice,
+      isCorrect,
+      options,
+      ctx: (function(){
+        try{ return Object.assign({}, window.__QUIZ_CTX || {}, { chosen: choice, isCorrect: isCorrect, score: score, total: totalQuestions }); }catch(e){ return null; }
+      })()
+    };
+    updateProgress();
+  }
+
+  function startQuiz(){
+    const answerFields = getFieldsByRole("answer");
+    const promptFields = getFieldsByRole("prompt");
+
+    const answerField = answerFields[0] || "term";
+    const numOptions = (QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_options) ? QUIZ_CONFIG.settings.num_options : 4;
+    const maxQuestions = (QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_questions) ? QUIZ_CONFIG.settings.num_questions : DATA.length;
+
+    totalQuestions = Math.max(0, Math.min(maxQuestions, DATA.length));
+
+    // update pill
+    if(pillTextEl){
+      pillTextEl.textContent = `${totalQuestions} Questions · Multiple Choice`;
+    }
+
+    if(!Array.isArray(DATA) || DATA.length === 0 || totalQuestions === 0){
+      // graceful empty state
+      questionIndexEl.textContent = "No questions available";
+      questionTypeEl.textContent = "";
+      promptTextEl.textContent = "";
+      promptHelperEl.textContent = "Please inject a dataset into this quiz HTML.";
+      optionsContainer.innerHTML = "";
+    optionsContainer.className = 'options layout-1';
+      recapEl.style.display = "none";
+      progressFillEl.style.width = "0%";
+      progressTextEl.textContent = "Answered 0 / 0";
+      scorePillEl.textContent = "Score: 0 / 0";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      return;
+    }
+
+    const indices = DATA.map((_, i) => i);
+    questionOrder = shuffle(indices).slice(0, totalQuestions);
+
+    currentIndex = 0;
+    score = 0;
+    answeredCount = 0;
+    history = [];
+    recapEl.style.display = "none";
+    progressFillEl.style.width = "0%";
+
+    const texts = QUIZ_CONFIG.text || {};
+
+    // navigation
+    prevBtn.onclick = () => {
+      if(currentIndex > 0){
+        currentIndex -= 1;
+        loadQuestion(answerField, promptFields, numOptions, texts);
+      }
+    };
+    nextBtn.onclick = () => {
+      if(currentIndex < totalQuestions - 1){
+        currentIndex += 1;
+        loadQuestion(answerField, promptFields, numOptions, texts);
+      }
+    };
+    restartBtn.onclick = () => { history = {}; answeredCount = 0; score = 0; quizCompleted = false; startQuiz(); };
+
+    loadQuestion(answerField, promptFields, numOptions, texts);
+  }
+
+  // End-of-quiz recap renderer (end only)
+function renderFinalRecap(){
+  recapListEl.innerHTML = "";
+  if(answeredCount < totalQuestions){
+    recapEl.style.display = "none";
+    return;
+  }
+  recapEl.style.display = "block";
+  history.forEach((h, idx) => {
+    if(!h) return;
+    const div = document.createElement("div");
+    div.className = "recap-item";
+    div.innerHTML = `
+      <div class="q-label">Q${idx + 1} – ${h.uiLabel}</div>
+      <div class="prompt">${h.promptValue}</div>
+      <div class="answer-line">
+        <span class="${h.isCorrect ? "tag-correct" : "tag-incorrect"}">
+          Your answer: ${h.chosen ?? "—"}
+        </span>
+        <span class="tag-neutral">Correct: ${h.correct}</span>
+      </div>
+    `;
+    recapListEl.appendChild(div);
+  });
+}
+
+// Start
+
+  startQuiz();
+  </script>
+
+<!-- RECAP_PATCH: Always-visible recap that does NOT change the core engine or constants block. -->
+<script>
+(function(){
+  try{
+    // Grab DOM
+    var recapEl = document.getElementById('recap');
+    var recapListEl = document.getElementById('recapList');
+    if(!recapEl || !recapListEl) return;
+
+    // Always show recap container (user requested)
+    recapEl.style.display = 'block';
+
+    // Helpers
+    function safeText(t){ return (t===null || t===undefined) ? '' : String(t); }
+
+    function applyTpl(t, ctx){
+      try{
+        if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx || {});
+      }catch(e){}
+      return safeText(t);
+    }
+
+    function getHistoryItems(){
+      // Robust: supports history keyed by quiz index OR by DATA index (dataIndex)
+      var history = window.history; // may be shadowed; fallback below
+      // In this template, history is a var in global scope, not window.history (browser history). So use eval-safe access.
+      // We'll try to read from global var via window.__quiz_history__ indirection set below.
+      var h = window.__quiz_history__;
+      var order = window.__quiz_questionOrder__;
+
+      var items = [];
+      var seen = {};
+
+      if(Array.isArray(order) && order.length){
+        for(var qi=0; qi<order.length; qi++){
+          var dataIndex = order[qi];
+          var entry = null;
+          if(h && (typeof dataIndex !== 'undefined') && h[dataIndex]) entry = h[dataIndex];
+          if(!entry && h && h[qi]) entry = h[qi];
+          if(entry){
+            items.push({q: qi+1, h: entry});
+            seen[dataIndex] = true;
+            seen[qi] = true;
+          }
+        }
+      }
+
+      // Fallback: include any remaining history entries
+      if(h){
+        if(Array.isArray(h)){
+          for(var i=0;i<h.length;i++){
+            if(seen[i]) continue;
+            if(h[i]) items.push({q: items.length+1, h: h[i]});
+          }
+        } else if(typeof h === 'object'){
+          for(var k in h){
+            if(!Object.prototype.hasOwnProperty.call(h,k)) continue;
+            if(seen[k]) continue;
+            if(h[k]) items.push({q: items.length+1, h: h[k]});
+          }
+        }
+      }
+
+      return items;
+    }
+
+    function renderRecapPatched(){
+      recapListEl.innerHTML = '';
+      var items = getHistoryItems();
+      if(!items.length){
+        var d0 = document.createElement('div');
+        d0.className = 'recap-item';
+        d0.innerHTML = '<div class="q-label">No answers yet</div><div class="prompt">Answer questions to populate the recap.</div>';
+        recapListEl.appendChild(d0);
+        return;
+      }
+
+      for(var i=0;i<items.length;i++){
+        var qnum = items[i].q;
+        var h = items[i].h || {};
+        var div = document.createElement('div');
+        div.className = 'recap-item';
+
+        var ctx = h.ctx || window.__QUIZ_CTX || {};
+        var promptDisp = applyTpl(h.promptValue, ctx);
+        var chosenDisp = applyTpl((h.chosen==null ? '—' : h.chosen), ctx);
+        var correctDisp = applyTpl((h.correct==null ? '' : h.correct), ctx);
+
+        var row = '';
+        row += '<div class="q-label">Q' + qnum + ' – ' + safeText(h.uiLabel) + '</div>';
+        row += '<div class="prompt">' + promptDisp + '</div>';
+        row += '<div class="answer-line">';
+        row += '<span class="' + (h.isCorrect ? 'tag-correct' : 'tag-incorrect') + '">Your answer: ' + chosenDisp + '</span>';
+        row += '<span class="tag-neutral">Correct: ' + correctDisp + '</span>';
+        row += '</div>';
+        div.innerHTML = row;
+        recapListEl.appendChild(div);
+      }
+    }
+
+    // ---- Hook into the engine without modifying it ----
+    // The engine uses global vars (questionOrder/history) but declared with var, so not on window.
+    // We expose them by wrapping startQuiz/loadQuestion/handleClick when they exist.
+
+    function attachHooks(){
+      try{
+        if(typeof window.startQuiz === 'function' && !window.__recapPatchedStart){
+          var origStart = window.startQuiz;
+          window.startQuiz = function(){
+            var r = origStart.apply(this, arguments);
+            // try to read globals via eval in this scope
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedStart = true;
+        }
+
+        if(typeof window.loadQuestion === 'function' && !window.__recapPatchedLoad){
+          var origLoad = window.loadQuestion;
+          window.loadQuestion = function(){
+            var r = origLoad.apply(this, arguments);
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedLoad = true;
+        }
+
+        if(typeof window.handleClick === 'function' && !window.__recapPatchedClick){
+          var origClick = window.handleClick;
+          window.handleClick = function(){
+            var r = origClick.apply(this, arguments);
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedClick = true;
+        }
+      }catch(e){}
+    }
+
+    // Attach now and also shortly after in case scripts load later
+    attachHooks();
+    setTimeout(attachHooks, 0);
+    setTimeout(attachHooks, 50);
+
+    // Initial render
+    renderRecapPatched();
+  }catch(e){}
+})();
+</script>
+
+
+<!-- RECAP_PATCH_V5 (clears on restart/menu, reuses saved options for wrong-answer restore) -->
+<script>
+(function(){
+  function safeText(t){ return (t===null || t===undefined) ? '' : String(t); }
+  function nl(s){ return safeText(s).replace(/\\n/g,'\n'); }
+  function applyTpl(t, ctx){
+    try{ if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx||{}); }catch(e){}
+    return safeText(t);
+  }
+
+  function clearRecapUI(){
+    try{ var recapListEl = document.getElementById('recapList'); if(recapListEl) recapListEl.innerHTML = ''; }catch(e){}
+  }
+
+  function sync(){
+    try{ window.__quiz_history__ = history; }catch(e){}
+    try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+  }
+
+  function renderRecap(){
+    var recapEl = document.getElementById('recap');
+    var recapListEl = document.getElementById('recapList');
+    if(!recapEl || !recapListEl) return;
+    recapEl.style.display = 'block';
+    recapListEl.innerHTML = '';
+
+    var h = window.__quiz_history__;
+    var order = window.__quiz_questionOrder__;
+    var items = [];
+
+    if(Array.isArray(order) && order.length){
+      for(var qi=0; qi<order.length; qi++){
+        var di = order[qi];
+        var entry = (h && h[di]) ? h[di] : (h && h[qi] ? h[qi] : null);
+        if(entry) items.push({q: qi+1, h: entry});
+      }
+    }
+
+    if(!items.length){
+      var d0=document.createElement('div');
+      d0.className='recap-item';
+      d0.innerHTML='<div class="q-label">No answers yet</div><div class="prompt">Answer questions to populate the recap.</div>';
+      recapListEl.appendChild(d0);
+      return;
+    }
+
+    for(var i2=0;i2<items.length;i2++){
+      var qnum=items[i2].q;
+      var hh=items[i2].h||{};
+      var ctx=hh.ctx||window.__QUIZ_CTX||{};
+      var promptDisp = nl(applyTpl(hh.promptValue, ctx));
+      var chosenDisp = nl(applyTpl(hh.chosen==null?'—':hh.chosen, ctx));
+      var correctDisp = nl(applyTpl(hh.correct==null?'':hh.correct, ctx));
+
+      var div=document.createElement('div');
+      div.className='recap-item';
+      div.innerHTML = '<div class="q-label">Q'+qnum+' – '+safeText(hh.uiLabel)+'</div>'
+        + '<div class="prompt">'+promptDisp+'</div>'
+        + '<div class="answer-line">'
+        + '<span class="'+(hh.isCorrect?'tag-correct':'tag-incorrect')+'">Your answer: '+chosenDisp+'</span>'
+        + '<span class="tag-neutral">Correct: '+correctDisp+'</span>'
+        + '</div>';
+      recapListEl.appendChild(div);
+    }
+  }
+
+  function wrap(){
+    try{
+      // Patch loadQuestion to reuse previous options when revisiting
+      if(typeof window.loadQuestion === 'function' && !window.__wrapLoadOptions){
+        var _l = window.loadQuestion;
+        window.loadQuestion = function(answerField, promptFields, numOptions, texts){
+          var r = _l.apply(this, arguments);
+          try{
+            var dataIndex = questionOrder[currentIndex];
+            if(history && history[dataIndex] && Array.isArray(history[dataIndex].options) && history[dataIndex].options.length){
+              var correct = history[dataIndex].correct;
+              var uiLabel = history[dataIndex].uiLabel;
+              var promptValue = history[dataIndex].promptValue;
+              var options = history[dataIndex].options;
+              var optionsContainer = document.getElementById('optionsContainer');
+              if(optionsContainer){
+                optionsContainer.innerHTML = '';
+                options.forEach(function(opt){
+                  var btn = document.createElement('button');
+                  btn.className = 'option-btn';
+                  btn.innerHTML = '<span class="label">'+opt+'</span>';
+                  btn.addEventListener('click', function(){ window.handleClick(opt, correct, uiLabel, promptValue, options); });
+                  optionsContainer.appendChild(btn);
+                });
+              }
+            }
+          }catch(e){}
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapLoadOptions = true;
+      }
+
+      if(typeof window.startQuiz === 'function' && !window.__wrapStartRecap){
+        var s=window.startQuiz;
+        window.startQuiz=function(){
+          clearRecapUI();
+          try{ window.__quiz_history__ = []; window.__quiz_questionOrder__ = []; }catch(e){}
+          var r=s.apply(this, arguments);
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapStartRecap=true;
+      }
+
+      if(typeof window.handleClick === 'function' && !window.__wrapClickRecap){
+        var c=window.handleClick;
+        window.handleClick=function(){
+          var r=c.apply(this, arguments);
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapClickRecap=true;
+      }
+
+      var rb = document.getElementById('restartBtn');
+      if(rb && !window.__wrapRestartClear){
+        rb.addEventListener('click', function(){
+          try{ window.__quiz_history__ = []; window.__quiz_questionOrder__ = []; }catch(e){}
+          clearRecapUI();
+        });
+        window.__wrapRestartClear = true;
+      }
+
+      sync();
+      renderRecap();
+    }catch(e){}
+  }
+
+  wrap();
+  setTimeout(wrap, 0);
+  setTimeout(wrap, 50);
+})();
+</script>
+
+<!-- MENU_OVERLAY_CONTROLLER (menu box text spacing + empty menu info) -->
+<script>
+(function(){
+  function nl(s){ return (s==null? '' : String(s)).replace(/\\n/g,'\n'); }
+  function applyTpl(t, ctx){
+    try{ if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx||{}); }catch(e){}
+    return (t==null? '' : String(t));
+  }
+
+  function initMenu(){
+    try{
+      var overlay = document.getElementById('menuOverlay');
+      var quizUI = document.getElementById('quizUI');
+      var startBtn = document.getElementById('startQuizBtn');
+      var menuBtn = document.getElementById('menuBtn');
+      var restartBtn = document.getElementById('restartBtn');
+      var card = document.querySelector('.quiz-card');
+
+      var menuTitle = document.getElementById('menuTitle');
+      var menuSubtitle = document.getElementById('menuSubtitle');
+      var menuInfo = document.getElementById('menuInfo');
+
+      if(!overlay || !quizUI || !startBtn) return;
+
+      function showOverlay(){
+        overlay.style.display='flex';
+        quizUI.style.display='none';
+        if(card) card.classList.add('menu-open');
+      }
+      function hideOverlay(){
+        overlay.style.display='none';
+        quizUI.style.display='block';
+        if(card) card.classList.remove('menu-open');
+      }
+
+      // Fill menu texts from QUIZ_CONFIG.text when available
+      try{
+        var t = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.title) ? QUIZ_CONFIG.text.title : (menuTitle ? menuTitle.textContent : '');
+        var st = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.subtitle) ? QUIZ_CONFIG.text.subtitle : (menuSubtitle ? menuSubtitle.textContent : '');
+        var info = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.menu_info) ? QUIZ_CONFIG.text.menu_info : '';
+        var startLabel = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.start_button) ? QUIZ_CONFIG.text.start_button : 'Start quiz';
+        var menuLabel = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.menu_button) ? QUIZ_CONFIG.text.menu_button : 'Back to menu';
+
+        if(menuTitle) menuTitle.textContent = nl(t);
+        if(menuSubtitle) menuSubtitle.textContent = nl(st);
+
+        var ctx = {};
+        try{
+          ctx = Object.assign({}, window.__QUIZ_CTX||{}, {
+            total: (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_questions) ? QUIZ_CONFIG.settings.num_questions : (typeof DATA !== 'undefined' && Array.isArray(DATA) ? DATA.length : 0),
+            options: (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_options) ? QUIZ_CONFIG.settings.num_options : 3
+          });
+        }catch(e){}
+
+        if(menuInfo){
+          var out = nl(applyTpl(info, ctx));
+          menuInfo.textContent = out;
+          var empty = !out.trim();
+          menuInfo.classList.toggle('is-empty', empty);
+          menuInfo.style.display = empty ? 'none' : 'block';
+        }
+
+        startBtn.textContent = startLabel;
+        if(menuBtn) menuBtn.textContent = menuLabel;
+      }catch(e){}
+
+      startBtn.addEventListener('click', function(){
+        try{ if(restartBtn) restartBtn.click(); }catch(e){}
+        hideOverlay();
+      });
+
+      if(menuBtn){
+        menuBtn.addEventListener('click', function(){
+          try{ if(restartBtn) restartBtn.click(); }catch(e){}
+          showOverlay();
+        });
+      }
+
+      showOverlay();
+    }catch(e){}
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMenu);
+  else initMenu();
+})();
+</script>
+
+
+<script>
+(function(){
+  try {
+    if (typeof QUIZ_CONFIG === "undefined" || !QUIZ_CONFIG.text) return;
+    var t = QUIZ_CONFIG.text.title || "";
+    var st = QUIZ_CONFIG.text.subtitle || "";
+    var elTitle = document.querySelector(".title") || document.querySelector("h1");
+    if (elTitle && t) elTitle.textContent = t;
+    var elSub = document.querySelector(".subtitle");
+    if (elSub && st) elSub.textContent = st;
+  } catch(e) {}
+})();
+</script>
+
+<script>
+(function(){
+  try {
+    if (typeof DATA === "undefined" || !Array.isArray(DATA)) return;
+    var ANSWER_KEY = "term";
+    if (!ANSWER_KEY) return;
+    DATA = DATA.map(function(r){
+      if (!r || typeof r !== "object") return r;
+      if (typeof r.term === "undefined") r.term = r[ANSWER_KEY];
+      return r;
+    });
+  } catch(e) {}
+})();
+</script>
+
+<script>
+// =========================================================
+// Helper: hide answer inside prompt by replacing characters with underscores
+// =========================================================
+function maskAnswerInText(text, answer){
+  try{
+    text = (text===null || text===undefined) ? '' : String(text);
+    answer = (answer===null || answer===undefined) ? '' : String(answer);
+    var a = answer.trim();
+    if(!a) return text;
+    var esc = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp(esc, 'gi');
+    return text.replace(re, function(m){
+      return m.replace(/\S/g, '_');
+    });
+  }catch(e){
+    return (text===null || text===undefined) ? '' : String(text);
+  }
+}
+</script>
+</body>
+</html>
